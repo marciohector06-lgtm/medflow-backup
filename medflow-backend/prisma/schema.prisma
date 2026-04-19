@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  cargo     String   // ADMIN, RECEPCIONISTA, MEDICO, ENFERMEIRO
+  createdAt DateTime @default(now())
+}
+
+model Paciente {
+  id                String   @id @default(uuid())
+  nome              String
+  cpf               String   @unique
+  data_nascimento   DateTime
+  sexo              String
+  whatsapp          String
+  
+  // Endereço (US-01 / ViaCEP)
+  cep               String
+  endereco          String
+  numero            String
+  bairro            String
+  cidade            String
+  uf                String
+
+  // Convênio
+  convenio          String?
+  carteirinha       String?
+
+  // Regras do TCC (Menores/Idosos - RN-001 e RN-002)
+  nome_responsavel  String?
+  cpf_responsavel   String?
+  parentesco        String?
+  nome_mae          String?  // Adicionado para cumprir a RN-002
+
+  atendimentos      Atendimento[]
+  createdAt         DateTime @default(now())
+}
+
+model Atendimento {
+  id                String   @id @default(uuid())
+  pacienteId        String
+  paciente          Paciente @relation(fields: [pacienteId], references: [id])
+
+  // O Motor do Kanban (US-02 e US-07)
+  status            String   @default("AGUARDANDO") // Pode ser: AGUARDANDO, CONVOCADO, EM_ATENDIMENTO, EXAME, FINALIZADO
+  prioridade        String   @default("NORMAL")
+
+  // Cronômetro para o Alerta Visual de Atraso (US-10 e RN-006)
+  hora_chegada      DateTime @default(now())
+  hora_inicio_atend DateTime?
+  hora_finalizacao  DateTime?
+
+  // Prontuário Médico (US-03 e US-04)
+  evolucao_clinica  String?
+  exames_solicitados String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
